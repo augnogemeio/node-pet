@@ -1,0 +1,31 @@
+{
+  "name": "node-pet",
+  "version": "1.0.0",
+  "description": "node training",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/augnogemeio/node-pet.git"
+  },
+  "author": "Augusto",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/augnogemeio/node-pet/issues"
+  },
+  "homepage": "https://github.com/augnogemeio/node-pet#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "consign": "^0.1.6",
+    "express": "^4.17.1",
+    "moment": "^2.29.1",
+    "mysql": "^2.18.1",
+    "save-dev": "0.0.1-security"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
