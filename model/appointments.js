@@ -1,5 +1,7 @@
 const moment = require('moment')
 
+const axios = require('axios')
+
 const connection = require('../infra/connection')
 
 class Appointment {
@@ -14,7 +16,7 @@ class Appointment {
         //Business constraints (client name>=5, date must be after currentDate)
 
         const booleanIsValidDate = moment(date).isSameOrAfter(createDate)
-        const booleanIsNameValid = appointment.client.length >= 5
+        const booleanIsClientDocIdValid = appointment.clientDocId.length >= 5
 
         const validations = [
             {
@@ -23,9 +25,9 @@ class Appointment {
                 message: 'Date must be equal or after current date.'
             },
             {
-                name: 'clientName',
-                valid: booleanIsNameValid,
-                message: 'Client name must have 5 characters or more.'
+                name: 'clientDocId',
+                valid: booleanIsClientDocIdValid,
+                message: 'Client Doc Id must have 5 characters or more.'
             }
         ]
 
@@ -43,7 +45,8 @@ class Appointment {
                 } else {
                     //console.log(results)
                     //res.json(results)
-                    res.status(201).json(appointment)
+                    const returnedId = results.insertId
+                    res.status(201).json({...appointment,returnedId})
                 }
             })                      
         }
@@ -65,11 +68,16 @@ class Appointment {
     idSearch(id, res){
         const sql = `SELECT * FROM appointments WHERE id=${id}`;
 
-        connection.query(sql,(error,results) => {
+        connection.query(sql, async (error,results) => {
             const appointment = results[0] //for return only one single result as json, and not an array with 1 element
+            const clientDocId = appointment.clientDocId
             if (error){
                 res.status(400).json(error)
             } else {
+                const { data } = await axios.get(`http://localhost:8082/${clientDocId}`)
+                
+                appointment.clientDocId = data
+
                 res.status(200).json(appointment)
             }
         })
