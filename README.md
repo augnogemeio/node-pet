@@ -45,3 +45,27 @@ PATCH ==> alter only a few fiedls (partial)
 created folder 'services', add the 3 files and run 'npm install'
 
 it creates an external service that bring the clients information of a given clientDocId
+
+# Some Curl Examples
+
+curl --location --request POST 'localhost:3000/appointments' \
+--header 'Content-Type: application/json' \
+--data-raw '{"clientDocId": "12345678933",
+ "petName": "Little Paty",
+ "service": "feed",
+ "status": "started",
+ "notes": "white",
+ "date": "28/03/2022"
+ }
+ 
+ curl --location --request POST 'localhost:3000/pets' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "name": "First pet",
+    "image": "./assets/code.jpg"
+
+}'
+
+curl --location --request GET 'localhost:8082/10020030020'
+ 
+ 
