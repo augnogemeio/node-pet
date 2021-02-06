@@ -5,9 +5,9 @@
 
 const customExpress = require('./config/customExpress')
 
-const connection = require('./infra/connection')
+const connection = require('./infra/database/connection')
 
-const Tables = require('./infra/tables')
+const Tables = require('./infra/database/tables')
 
 connection.connect(error => {
     if (error){

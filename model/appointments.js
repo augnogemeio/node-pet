@@ -2,67 +2,81 @@ const moment = require('moment')
 
 const axios = require('axios')
 
-const connection = require('../infra/connection')
+const connection = require('../infra/database/connection')
+
+const repository = require('../repository/appointment')
 
 class Appointment {
-    add(appointment, res) {
-        const sql = 'INSERT INTO Appointments SET ?'
+
+    constructor(){
+
+        this.booleanIsValidDate = ({date,createDate}) => moment(date).isSameOrAfter(createDate)
+        this.booleanIsClientDocIdValid = ({docIdLenght}) => docIdLenght >= 5
+        //this.booleanIsClientDocIdValid = appointment.clientDocId.length >= 5
+
+        this.validate = parameters =>
+            this.validations.filter(field => {
+                const { name } = field
+                const parameter = parameters[name]
+
+                return !field.valid(parameter)
+            })
 
 
-        const createDate = moment().format('YYYY-MM-DD HH:MM:SS')
-        const date = moment(appointment.date, 'DD/MM/YYYY').format('YYYY-MM-DD HH:MM:SS')
-        const datedAppointment = {...appointment, createDate, date}
-
-        //Business constraints (client name>=5, date must be after currentDate)
-
-        const booleanIsValidDate = moment(date).isSameOrAfter(createDate)
-        const booleanIsClientDocIdValid = appointment.clientDocId.length >= 5
-
-        const validations = [
+        this.validations = [
             {
                 name: 'date',
-                valid: booleanIsValidDate,
+                valid: this.booleanIsValidDate,
                 message: 'Date must be equal or after current date.'
             },
             {
                 name: 'clientDocId',
-                valid: booleanIsClientDocIdValid,
+                valid: this.booleanIsClientDocIdValid,
                 message: 'Client Doc Id must have 5 characters or more.'
             }
         ]
 
-        const errorsDetected = validations.filter(field => !field.valid)
+    }
+
+    add(appointment) {
+        //const sql = 'INSERT INTO Appointments SET ?'
+
+
+        const createDate = moment().format('YYYY-MM-DD HH:MM:ss')
+        const date = moment(appointment.date, 'DD/MM/YYYY').format('YYYY-MM-DD HH:MM:ss')
+        const datedAppointment = {...appointment, createDate, date}
+
+        //Business constraints (client name>=5, date must be after currentDate)
+
+        const parameters = {
+            date: { date, createDate },
+            clientDocId: { docIdLenght: appointment.clientDocId.length }
+        }
+
+
+        //const errorsDetected = this.validations.filter(field => !field.valid)
+        const errorsDetected = this.validate(parameters)
         const booleanThereIsErrors = errorsDetected.length // if length > 0, so there is an error
 
         if (booleanThereIsErrors){
-            res.status(400).json(errorsDetected)
+            //res.status(400).json(errorsDetected)
+            return new Promise((resolve,reject)=>reject(errorsDetected))
         } else {
-            connection.query(sql, datedAppointment, (error, results) => {
-                if(error) {
-                    //console.log(error)
-                    //res.json(error)
-                    res.status(400).json(error)
-                } else {
-                    //console.log(results)
-                    //res.json(results)
-                    const returnedId = results.insertId
-                    res.status(201).json({...appointment,returnedId})
-                }
-            })                      
+            return repository.add(datedAppointment)
+            .then(results =>{
+                const returnedId = results.insertId
+                return ({...appointment,returnedId})
+            })
+
+
+                            
         }
     }
 
-    list(res) {
-        const sql = 'SELECT * FROM appointments'
-
-        connection.query(sql, (error, results) => { 
-            if(error) {
-                res.status(400).json(error)
-            } else { 
-                res.status(200).json(results)
-            }}
-            )
-        }    
+    list() {
+        return repository.list()
+        
+    }    
 
 
     idSearch(id, res){
@@ -86,7 +100,7 @@ class Appointment {
 
     updateById(id,values,res){
         if (values.date){
-            values.date = moment(values.date, 'DD/MM/YYYY').format('YYYY-MM-DD HH:MM:SS')
+            values.date = moment(values.date, 'DD/MM/YYYY').format('YYYY-MM-DD HH:MM:ss')
         }
         
         const sql = 'UPDATE appointments SET ? WHERE id = ?'
